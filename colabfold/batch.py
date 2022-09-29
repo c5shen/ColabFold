@@ -749,7 +749,11 @@ def get_msa_and_templates(
 ]:
     from colabfold.colabfold import run_mmseqs2
 
-    use_env = msa_mode == "MMseqs2 (UniRef+Environmental)"
+    # changed by Chengze Shen on 9.11.2022
+    # hardcode to True for other MSA method (not using MMSeqs uniref only etc.)
+    #use_env = msa_mode == "MMseqs2 (UniRef+Environmental)"
+    use_env = True
+
     # remove duplicates before searching
     query_sequences = (
         [query_sequences] if isinstance(query_sequences, str) else query_sequences
@@ -1174,6 +1178,7 @@ def msa_to_str(
     return msa
 
 
+    #msa_mode: str = "MMseqs2 (UniRef+Environmental)",
 def run(
     queries: List[Tuple[str, Union[str, List[str]], Optional[List[str]]]],
     result_dir: Union[str, Path],
@@ -1183,7 +1188,7 @@ def run(
     is_complex: bool,
     num_ensemble: int = 1,
     model_type: str = "auto",
-    msa_mode: str = "MMseqs2 (UniRef+Environmental)",
+    msa_mode: str,
     use_templates: bool = False,
     custom_template_path: str = None,
     use_amber: bool = False,
@@ -1261,11 +1266,16 @@ def run(
     }
     config_out_file = result_dir.joinpath("config.json")
     config_out_file.write_text(json.dumps(config, indent=4))
-    use_env = msa_mode == "MMseqs2 (UniRef+Environmental)"
-    use_msa = (
-        msa_mode == "MMseqs2 (UniRef only)"
-        or msa_mode == "MMseqs2 (UniRef+Environmental)"
-    )
+    # changed by Chengze on 9.11.2022
+    # previously msa_mode is default to MMseqs2 so use_env=True
+    # for other MSA method (MAGUS) that follows MMseqs, it should also be true
+    #use_env = msa_mode == "MMseqs2 (UniRef+Environmental)"
+    use_env = True
+    #use_msa = (
+    #    msa_mode == "MMseqs2 (UniRef only)"
+    #    or msa_mode == "MMseqs2 (UniRef+Environmental)"
+    #)
+    use_msa = True
 
     bibtex_file = write_bibtex(
         model_type, use_msa, use_env, use_templates, use_amber, result_dir
@@ -1579,6 +1589,8 @@ def main():
             "MMseqs2 (UniRef+Environmental)",
             "MMseqs2 (UniRef only)",
             "single_sequence",
+            "MAGUS",
+            "MAFFT"
         ],
         help="Using an a3m file as input overwrites this option",
     )
@@ -1637,7 +1649,7 @@ def main():
     )
     parser.add_argument(
         "--recompile-all-models",
-        help="recompile all models instead of just model 1 and 3",
+        help="recompile all models instead of just model 1 ane 3",
         default=False,
         action="store_true",
     )
